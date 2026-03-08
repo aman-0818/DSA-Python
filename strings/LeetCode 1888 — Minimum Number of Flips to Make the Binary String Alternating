@@ -1,0 +1,266 @@
+🚀 LeetCode 1888 — Minimum Number of Flips to Make the Binary String Alternating
+
+This problem is honestly one of the most impressive pattern-based problems I have solved so far.
+While solving it, the interesting part is that multiple approaches exist, and some of them are extremely elegant once you understand the pattern behavior of alternating strings.
+
+The key to solving this problem is recognizing how alternating patterns behave under rotations and how we can efficiently check all rotations without actually generating them.
+
+🧩 Problem Statement
+
+You are given a binary string s.
+
+Two types of operations are allowed:
+
+🔹 Type-1 Operation (Rotation)
+
+Remove the first character of the string and append it to the end.
+
+Example:
+
+s = "10110"
+
+After one rotation:
+"01101"
+🔹 Type-2 Operation (Flip)
+
+You can flip any character in the string.
+
+0 → 1
+1 → 0
+🎯 Objective
+
+Return the minimum number of flips (Type-2 operations) required to make the string alternating.
+
+An alternating binary string looks like one of these two patterns:
+
+0101010101...
+1010101010...
+🧠 Core Observation
+
+The most important realization is:
+
+Any alternating binary string must match one of only two possible patterns.
+
+Pattern 1 → 010101010...
+Pattern 2 → 101010101...
+
+So instead of thinking about all possible alternating strings, we only need to compare the string with these two patterns.
+
+🔎 Step 1 — Understanding Rotations
+
+Because Type-1 rotation operations are allowed, the string can appear in multiple forms.
+
+Example:
+
+s = "111000"
+
+Possible rotations:
+
+111000
+110001
+100011
+000111
+001110
+011100
+
+For each rotation, we want to know:
+
+How many flips are required
+to convert it into an alternating string?
+
+But generating every rotation explicitly would cost:
+
+O(n²)
+
+which is not optimal.
+
+💡 Key Trick — String Doubling
+
+A powerful trick is to concatenate the string with itself.
+
+s = "111000"
+
+s + s = "111000111000"
+
+Now something interesting happens:
+
+Every possible rotation of s becomes a substring of length n inside s + s.
+
+Example:
+
+111000111000
+
+Windows of size 6:
+
+111000
+110001
+100011
+000111
+001110
+011100
+
+These are exactly all rotations of the original string.
+
+So instead of generating rotations, we simply use a sliding window of size n.
+
+🎯 Step 2 — Build Alternating Patterns
+
+We build two alternating strings:
+
+Pattern A → 0101010101...
+Pattern B → 1010101010...
+
+Both patterns should have length 2n (because we doubled the string).
+
+⚙️ Sliding Window Strategy
+
+While sliding the window:
+
+Compare the current character with the expected pattern.
+
+Maintain mismatch counts.
+
+When the window moves:
+
+Remove mismatch from the left element.
+
+Add mismatch for the new element.
+
+At every valid window of length n, compute:
+
+minimum(diff_pattern1, diff_pattern2)
+💻 Implementation (Sliding Window Approach)
+class Solution:
+    def minFlips(self, s: str) -> int:
+        n = len(s)
+        s = s + s
+        
+        alt1 = ""
+        alt2 = ""
+        
+        for i in range(len(s)):
+            if i % 2 == 0:
+                alt1 += "0"
+                alt2 += "1"
+            else:
+                alt1 += "1"
+                alt2 += "0"
+        
+        res = float("inf")
+        diff1 = 0
+        diff2 = 0
+        
+        l = 0
+        
+        for r in range(len(s)):
+            
+            if s[r] != alt1[r]:
+                diff1 += 1
+            if s[r] != alt2[r]:
+                diff2 += 1
+            
+            if r - l + 1 > n:
+                if s[l] != alt1[l]:
+                    diff1 -= 1
+                if s[l] != alt2[l]:
+                    diff2 -= 1
+                l += 1
+            
+            if r - l + 1 == n:
+                res = min(res, diff1, diff2)
+        
+        return res
+📊 Complexity Analysis
+Time Complexity  → O(n)
+Space Complexity → O(2n)
+
+Why?
+
+Because we created:
+
+s + s
+pattern1
+pattern2
+⚡ Further Optimization
+
+We can optimize the space usage even more.
+
+Instead of actually building s + s, we can simulate rotations using modulo indexing.
+
+s[i % n]
+
+This allows us to iterate 2n times while still referencing the original string.
+
+💻 Optimized Implementation
+class Solution:
+    def minFlips(self, s: str) -> int:
+        n = len(s)
+        res = float("inf")
+        
+        diff1 = 0
+        diff2 = 0
+        
+        for i in range(2*n):
+            char = s[i % n]
+            
+            if i % 2 == 0:
+                if char != '0':
+                    diff1 += 1
+                if char != '1':
+                    diff2 += 1
+            else:
+                if char != '1':
+                    diff1 += 1
+                if char != '0':
+                    diff2 += 1
+            
+            if i >= n:
+                prev = s[(i-n) % n]
+                
+                if (i-n) % 2 == 0:
+                    if prev != '0':
+                        diff1 -= 1
+                    if prev != '1':
+                        diff2 -= 1
+                else:
+                    if prev != '1':
+                        diff1 -= 1
+                    if prev != '0':
+                        diff2 -= 1
+            
+            if i >= n-1:
+                res = min(res, diff1, diff2)
+        
+        return res
+📊 Optimized Complexity
+Time Complexity  → O(n)
+Space Complexity → O(1)
+
+No additional strings are created.
+
+🧠 Intuition Summary
+
+The whole solution relies on three important observations:
+
+1️⃣ An alternating string has only two possible patterns
+
+010101...
+101010...
+
+2️⃣ Every rotation of a string appears inside s + s
+
+3️⃣ Using a sliding window of size n, we can check all rotations efficiently.
+
+⭐ Final Thoughts
+
+This problem is a great example of combining:
+
+Pattern Recognition
++
+Sliding Window
++
+String Rotation Trick
+
+At first glance the problem looks complicated because of rotations, but once you realize the s + s trick, the solution becomes very elegant and efficient.
+
+This is one of those problems where understanding the pattern completely changes the difficulty of the problem.
